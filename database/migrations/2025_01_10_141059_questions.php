@@ -16,6 +16,7 @@ return new class extends Migration
             $table->enum('type', ['multiple_choice', 'true_false', 'fill_blanks', 'essay'])->default('essay');
             $table->text('question_text')->nullable();
             $table->morphs('model');
+            $table->float('points')->default(0);
             $table->timestamps();
         });
     }

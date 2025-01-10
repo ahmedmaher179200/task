@@ -15,4 +15,9 @@ class Question extends Model
         'model_type',
         'model_id',
     ];
+
+    public function Answers()
+    {
+        return $this->hasMany(Answer::class, 'question_id');
+    }
 }

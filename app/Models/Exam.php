@@ -15,4 +15,9 @@ class Exam extends Model
         'course_id',
         'exam_time',
     ];
+
+    public function Questions()
+    {
+        return $this->morphMany(Question::class, 'model');
+    }
 }
