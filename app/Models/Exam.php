@@ -15,9 +15,21 @@ class Exam extends Model
         'course_id',
         'exam_time',
     ];
+    
+    protected $casts = [
+        'exam_time' => 'integer',
+    ];
 
     public function Questions()
     {
         return $this->morphMany(Question::class, 'model');
+    }
+
+    public function Course(){
+        return $this->belongsTo(Course::class, 'course_id');
+    }
+
+    public function scopeEager($query){
+        return $query->with('Questions.Answers', 'Course');
     }
 }

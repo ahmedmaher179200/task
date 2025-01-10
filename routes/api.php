@@ -14,4 +14,6 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+Route::get('/exams/{id}', [ExamController::class,'show']);
 Route::post('/exams', [ExamController::class,'create']);
+Route::post('/exams/{id}/start', [ExamController::class,'start']);

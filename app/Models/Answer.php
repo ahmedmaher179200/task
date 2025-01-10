@@ -15,4 +15,8 @@ class Answer extends Model
         'is_answer',
         'answer_text',
     ];
+
+    protected $casts = [
+        'is_answer' => 'integer',
+    ];
 }
