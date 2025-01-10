@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('title')->nullable();
             $table->foreignId('course_id')->nullable()->constrained('courses')->cascadeOnDelete();
             $table->integer('exam_time')->default(0)->comment('in minutes');
-            $table->enum('status', ['progress', 'completed'])->default('progress');
             $table->timestamps();
         });
     }

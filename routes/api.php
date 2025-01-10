@@ -21,3 +21,6 @@ Route::post('/exams/{id}/pausing', [ExamController::class,'pausing']);
 Route::post('/exams/{id}/resuming', [ExamController::class,'resuming']);
 Route::post('/exams/{id}/completed', [ExamController::class,'completed']);
 
+Route::get('exams/{id}/reports/general', [ExamController::class,'general']);
+
+

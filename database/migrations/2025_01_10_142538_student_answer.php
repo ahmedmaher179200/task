@@ -15,7 +15,6 @@ return new class extends Migration
             $table->bigIncrements('id')->unique();
             $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnDelete();
             $table->foreignId('question_id')->nullable()->constrained('questions')->cascadeOnDelete();
-            $table->boolean('is_answer')->default(0);
             $table->text('submit_answer')->nullable();
             $table->timestamps();
         });

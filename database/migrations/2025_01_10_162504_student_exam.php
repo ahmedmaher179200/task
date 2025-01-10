@@ -15,6 +15,7 @@ return new class extends Migration
             $table->bigIncrements('id')->unique();
             $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnDelete();
             $table->foreignId('exam_id')->nullable()->constrained('exams')->cascadeOnDelete();
+            $table->enum('status', ['progress', 'completed'])->default('progress');
             $table->timestamps();
         });
     }

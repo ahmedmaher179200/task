@@ -21,6 +21,11 @@ class Question extends Model
         return $this->hasMany(Answer::class, 'question_id');
     }
 
+    public function model()
+    {
+        return $this->morphTo();
+    }
+
     public function scopeMyRandom($query){
         return $query->inRandomOrder();
     }

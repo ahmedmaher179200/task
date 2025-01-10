@@ -92,8 +92,9 @@ class ExamService
                     ->where('end', null)
                     ->update(['end' => now()]);
 
-        $exam->status = 'completed';
-        $exam->save();
+        UserExam::where('exam_id', $exam->id)
+                    ->where('user_id', $user->id)
+                    ->update(['status' => 'completed']);
     }
 
     public function CreateStudentAnswer($user, $answers){

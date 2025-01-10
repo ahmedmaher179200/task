@@ -13,4 +13,8 @@ class Course extends Model
     protected $fillable = [
         'name',
     ];
+
+    public function Exams(){
+        return $this->hasMany(Exam::class, 'course_id');
+    }
 }
