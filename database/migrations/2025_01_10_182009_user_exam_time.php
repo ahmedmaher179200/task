@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('exams', function (Blueprint $table) {
+        Schema::create('user_exam_time_line', function (Blueprint $table) {
             $table->bigIncrements('id')->unique();
-            $table->string('title')->nullable();
-            $table->foreignId('course_id')->nullable()->constrained('courses')->cascadeOnDelete();
-            $table->integer('exam_time')->default(0)->comment('in minutes');
-            $table->enum('status', ['progress', 'completed'])->default('progress');
+            $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnDelete();
+            $table->foreignId('exam_id')->nullable()->constrained('exams')->cascadeOnDelete();
+            $table->dateTime('start')->nullable();
+            $table->dateTime('end')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('exams');
+        Schema::dropIfExists('user_exam_time_line');
     }
 };

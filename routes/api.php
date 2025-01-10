@@ -17,3 +17,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/exams/{id}', [ExamController::class,'show']);
 Route::post('/exams', [ExamController::class,'create']);
 Route::post('/exams/{id}/start', [ExamController::class,'start']);
+Route::post('/exams/{id}/pausing', [ExamController::class,'pausing']);
+Route::post('/exams/{id}/resuming', [ExamController::class,'resuming']);
+

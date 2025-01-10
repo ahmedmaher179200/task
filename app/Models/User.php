@@ -31,6 +31,10 @@ class User extends Authenticatable
         return $this->belongsToMany(Exam::class, 'user_exam', 'user_id', 'exam_id');
     }
 
+    public function UserExamTimeLines(){
+        return $this->hasMany(UserExamTimeLine::class, 'user_id');
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

@@ -56,4 +56,42 @@ class ExamController extends Controller
             return $this->failed($e->getMessage(),400);
         }
     }
+
+    public function pausing(Request $request,$exam_id){
+        try {
+            DB::beginTransaction();   
+            $user = User::find($request->user_id);
+            if(!$user)
+                return $this->failed('user not found',404);
+            
+            $exam = Exam::find($exam_id);
+            if(!$exam)
+                return $this->failed('exam not found',404);
+    
+            $this->ExamService->pausing($exam, $user);
+            DB::commit();
+            return $this->success('success',200);
+        } catch (Exception $e) {
+            return $this->failed($e->getMessage(),400);
+        }
+    }
+
+    public function resuming(Request $request,$exam_id){
+        try {
+            DB::beginTransaction();   
+            $user = User::find($request->user_id);
+            if(!$user)
+                return $this->failed('user not found',404);
+            
+            $exam = Exam::find($exam_id);
+            if(!$exam)
+                return $this->failed('exam not found',404);
+    
+            $this->ExamService->resuming($exam, $user);
+            DB::commit();
+            return $this->success('success',200);
+        } catch (Exception $e) {
+            return $this->failed($e->getMessage(),400);
+        }
+    }
 }
