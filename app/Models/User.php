@@ -35,6 +35,10 @@ class User extends Authenticatable
         return $this->hasMany(UserExamTimeLine::class, 'user_id');
     }
 
+    public function StudentAnswers(){
+        return $this->hasMany(StudentAnswer::class, 'user_id');
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

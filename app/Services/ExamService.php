@@ -3,9 +3,11 @@
 namespace App\Services;
 
 use App\Models\Exam;
+use App\Models\StudentAnswer;
 use App\Models\UserExam;
 use App\Models\UserExamTimeLine;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class ExamService
 {
@@ -67,6 +69,36 @@ class ExamService
             'exam_id' => $exam->id,
             'start' => now(),
         ]);
+    }
+
+    public function completed($exam, $user,$data){
+        $this->StudentEnrolledCourseValidation($exam, $user);
+        if($exam->status == 'completed')
+            throw new Exception('this exam is already completed');
+
+        $total_minutes = $user->UserExamTimeLines()
+                                ->where('exam_id', $exam->id)
+                                ->select(DB::raw('SUM(TIMESTAMPDIFF(MINUTE, `start`, `end`)) as total_minutes'))
+                                ->value('total_minutes');
+
+        if($exam->exam_time < $total_minutes)
+            throw new Exception('exam time is ended');
+
+        $this->CreateStudentAnswer($user, $data['answers']);
+
+        $user->UserExamTimeLines()
+                    ->where('exam_id', $exam->id)
+                    ->latest()
+                    ->where('end', null)
+                    ->update(['end' => now()]);
+
+        $exam->status = 'completed';
+        $exam->save();
+    }
+
+    public function CreateStudentAnswer($user, $answers){
+        $answers = collect($answers)->unique('question_id')->values()->all();
+        $user->StudentAnswers()->createMany($answers);
     }
 
     public function StudentEnrolledCourseValidation($exam, $user){

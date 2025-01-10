@@ -27,8 +27,8 @@ class CreateRequest extends FormRequest
             'title'     => 'required|string',
             'exam_time'     => 'required|numeric',
             'course_id' => 'required|exists:courses,id',
-            'questions' => 'required|array|min:1',
 
+            'questions' => 'required|array|min:1',
             'questions.*.question_text' => 'required|string',
             'questions.*.type' => 'required|in:multiple_choice,true_false,fill_blanks,essay',
             'questions.*.points' => 'required|numeric',

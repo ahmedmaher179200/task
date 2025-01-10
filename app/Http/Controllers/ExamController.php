@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Exam\CompletedRequest;
 use App\Http\Requests\Exam\CreateRequest;
 use App\Http\Resources\ExamResource;
 use App\Models\Exam;
@@ -88,6 +89,26 @@ class ExamController extends Controller
                 return $this->failed('exam not found',404);
     
             $this->ExamService->resuming($exam, $user);
+            DB::commit();
+            return $this->success('success',200);
+        } catch (Exception $e) {
+            return $this->failed($e->getMessage(),400);
+        }
+    }
+
+    public function completed(CompletedRequest $request,$exam_id){
+        try {
+            DB::beginTransaction();   
+            $user = User::find($request->user_id);
+            if(!$user)
+                return $this->failed('user not found',404);
+            
+            $exam = Exam::find($exam_id);
+            if(!$exam)
+                return $this->failed('exam not found',404);
+
+            $data = $request->only('answers');
+            $this->ExamService->completed($exam, $user, $data);
             DB::commit();
             return $this->success('success',200);
         } catch (Exception $e) {
