@@ -10,7 +10,6 @@ use App\Models\UserCourse;
 use App\Models\UserExam;
 use App\Models\UserExamTimeLine;
 use App\Traits\response;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
@@ -47,20 +46,21 @@ class ReportController extends Controller
                                     'questions.id',
                                     'questions.question_text',
                                     'questions.type',
-                                    'questions.points',
                                     DB::raw('SUM(IF(student_answer.submit_answer = answers.answer_text, 1, 0)) as correct_answer')
                                 );
 
         $hardest = (clone $baseQuery)
+            ->orderBy('correct_answer')
             ->orderByDesc('correct_answer')
             ->first();
         
         $easiest = (clone $baseQuery)
-            ->orderBy('correct_answer')
+            ->orderByDesc('correct_answer')
             ->first();
+
         return $this->success('success',200,'data',[
-            'hardest' => $hardest?->correct_answer,
-            'easiest' => $easiest?->correct_answer,
+            'hardest' => $hardest,
+            'easiest' => $easiest,
         ]);
     }
 
@@ -79,6 +79,31 @@ class ReportController extends Controller
         $answered_counts = StudentAnswer::where('exam_id', $request->exam_id)->count();
 
         return $this->success('success',200,'data',round(($total_time_in_minutes / $answered_counts), 2));
+    }
+
+    public function leaderboard(){
+        $data = DB::table(
+            DB::raw('(
+                SELECT 
+                    courses.id as course_id,
+                    courses.name as course_name,
+                    users.id as user_id,
+                    users.name as student_name,
+                    SUM(user_exam.mark) as total_mark,
+                    ROW_NUMBER() OVER (PARTITION BY courses.id ORDER BY SUM(user_exam.mark) DESC) as row_num
+                FROM user_exam
+                INNER JOIN exams ON exams.id = user_exam.exam_id
+                INNER JOIN users ON users.id = user_exam.user_id
+                INNER JOIN courses ON courses.id = exams.course_id
+                WHERE user_exam.status = "completed"
+                GROUP BY courses.id, users.id
+            ) as subquery')
+        )
+        ->where('subquery.row_num', 1)
+        ->orderBy('subquery.total_mark', 'desc')
+        ->get();
+
+        return $this->success('success',200,'data',$data);
     }
 
     public function general(ShowRequest $request){

@@ -14,6 +14,7 @@ class Question extends Model
         'question_text',
         'model_type',
         'model_id',
+        'points'
     ];
 
     public function Answers()

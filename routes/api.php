@@ -25,4 +25,10 @@ Route::get('reports/general', [ReportController::class,'general']);
 Route::get('reports/results', [ReportController::class,'results']);
 Route::get('reports/questions-analysis', [ReportController::class,'questionsAnalysis']);
 Route::get('reports/average-time', [ReportController::class,'averageTime']);
+Route::get('reports/leaderboard', [ReportController::class,'leaderboard']);
+
+
+
+
+
 

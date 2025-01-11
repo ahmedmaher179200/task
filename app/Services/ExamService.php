@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\Answer;
 use App\Models\Exam;
+use App\Models\Question;
 use App\Models\StudentAnswer;
 use App\Models\UserExam;
 use App\Models\UserExamTimeLine;
@@ -84,8 +86,7 @@ class ExamService
         if($exam->exam_time < $total_minutes)
             throw new Exception('exam time is ended');
 
-        $this->CreateStudentAnswer($user, $exam,$data['answers']);
-
+        $mark = $this->CreateStudentAnswer($user, $exam,$data['answers']);
         $user->UserExamTimeLines()
                     ->where('exam_id', $exam->id)
                     ->latest()
@@ -94,16 +95,37 @@ class ExamService
 
         UserExam::where('exam_id', $exam->id)
                     ->where('user_id', $user->id)
-                    ->update(['status' => 'completed']);
+                    ->update(['status' => 'completed','mark' => $mark]);
     }
 
-    public function CreateStudentAnswer($user, $exam,$answers){
-        $answers = array_map(function ($student) use($exam){
-            $student["exam_id"] = $exam->id;
-            return $student;
-        }, $answers);
-        $answers = collect($answers)->unique('question_id')->values()->all();
-        $user->StudentAnswers()->createMany($answers);
+    public function CreateStudentAnswer($user, $exam, $answers){
+        $this->AnswerQuestionValidation($exam, $answers);
+        $mark = 0;
+        foreach($answers as $answer_data){
+            $answer = Answer::where('is_answer', 1)
+                                    ->where('question_id', $answer_data['question_id'])
+                                    ->first();
+
+            if($answer && $answer_data['submit_answer'] == $answer->answer_text)
+                $mark += $answer->Question?->points;
+
+            $user->StudentAnswers()->create([
+                "question_id" => $answer_data['question_id'],
+                "submit_answer" => $answer_data['submit_answer'],
+                'exam_id' => $exam->id,
+            ]);
+        }
+        return $mark;
+    }
+
+    public function AnswerQuestionValidation($exam, $answers){
+        $questionIds = array_column($answers, 'question_id');
+        $questions_count = Question::where('model_id', $exam->id)
+                                    ->where('model_type', Exam::class)
+                                    ->whereIn('id', $questionIds)
+                                    ->count();        
+        if($questions_count != count($questionIds))
+            throw new Exception('question not for this exam');
     }
 
     public function StudentEnrolledCourseValidation($exam, $user){

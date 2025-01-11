@@ -19,4 +19,9 @@ class Answer extends Model
     protected $casts = [
         'is_answer' => 'integer',
     ];
+
+    public function Question()
+    {
+        return $this->belongsTo(Question::class, 'question_id');
+    }
 }

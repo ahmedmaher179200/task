@@ -36,6 +36,12 @@ class CreateRequest extends FormRequest
             'questions.*.answers' => 'required|array|min:1',
             'questions.*.answers.*.is_answer' => 'nullable|boolean',
             'questions.*.answers.*.answer_text' => 'required|string',
+            'questions.*.answers' => function ($attribute, $value, $fail) {
+                $count = collect($value)->where('is_answer', 1)->count();
+                if ($count !== 1) {
+                    $fail('There should be exactly one answer with is_answer = 1.');
+                }
+            }
 
         ];
     }
