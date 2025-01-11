@@ -8,6 +8,7 @@ use App\Models\StudentAnswer;
 use App\Models\User;
 use App\Models\UserCourse;
 use App\Models\UserExam;
+use App\Models\UserExamTimeLine;
 use App\Traits\response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -64,7 +65,20 @@ class ReportController extends Controller
     }
 
     public function averageTime(ShowRequest $request){
+        $total_time_in_minutes = UserExamTimeLine::join('user_exam', 'user_exam_time_line.exam_id', '=', 'user_exam.exam_id')
+                        ->where('user_exam_time_line.exam_id', $request->exam_id)
+                        ->where('user_exam.status', 'completed')
+                        ->groupBy('user_exam_time_line.id')
+                        ->select(
+                            'user_exam_time_line.id',
+                            DB::raw('TIMESTAMPDIFF(MINUTE, user_exam_time_line.start, user_exam_time_line.end) AS total_minutes')
+                        )
+                        ->get()
+                        ->sum('total_minutes');
 
+        $answered_counts = StudentAnswer::where('exam_id', $request->exam_id)->count();
+
+        return $this->success('success',200,'data',round(($total_time_in_minutes / $answered_counts), 2));
     }
 
     public function general(ShowRequest $request){
