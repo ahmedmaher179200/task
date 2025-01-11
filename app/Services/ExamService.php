@@ -84,7 +84,7 @@ class ExamService
         if($exam->exam_time < $total_minutes)
             throw new Exception('exam time is ended');
 
-        $this->CreateStudentAnswer($user, $data['answers']);
+        $this->CreateStudentAnswer($user, $exam,$data['answers']);
 
         $user->UserExamTimeLines()
                     ->where('exam_id', $exam->id)
@@ -97,7 +97,11 @@ class ExamService
                     ->update(['status' => 'completed']);
     }
 
-    public function CreateStudentAnswer($user, $answers){
+    public function CreateStudentAnswer($user, $exam,$answers){
+        $answers = array_map(function ($student) use($exam){
+            $student["exam_id"] = $exam->id;
+            return $student;
+        }, $answers);
         $answers = collect($answers)->unique('question_id')->values()->all();
         $user->StudentAnswers()->createMany($answers);
     }

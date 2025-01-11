@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\ExamController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -21,6 +21,8 @@ Route::post('/exams/{id}/pausing', [ExamController::class,'pausing']);
 Route::post('/exams/{id}/resuming', [ExamController::class,'resuming']);
 Route::post('/exams/{id}/completed', [ExamController::class,'completed']);
 
-Route::get('exams/{id}/reports/general', [ExamController::class,'general']);
-
+Route::get('reports/general', [ReportController::class,'general']);
+Route::get('reports/results', [ReportController::class,'results']);
+Route::get('reports/questions-analysis', [ReportController::class,'questionsAnalysis']);
+Route::get('reports/average-time', [ReportController::class,'averageTime']);
 

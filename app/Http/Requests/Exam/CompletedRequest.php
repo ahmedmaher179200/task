@@ -24,8 +24,6 @@ class CompletedRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'exam_id' => 'required|exists:exams,id',
-
             'answers' => 'required|array',
             'answers.*.submit_answer' => 'required|string',
             'answers.*.question_id' => 'required|exists:questions,id',

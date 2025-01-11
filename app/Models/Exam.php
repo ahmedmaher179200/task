@@ -14,6 +14,7 @@ class Exam extends Model
         'title',
         'course_id',
         'exam_time',
+        'points'
     ];
     
     protected $casts = [

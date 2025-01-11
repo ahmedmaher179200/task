@@ -117,32 +117,4 @@ class ExamController extends Controller
             return $this->failed($e->getMessage(),400);
         }
     }
-
-    public function general($exam_id){
-        $exam = Exam::find($exam_id);
-        if(!$exam)
-            return $this->failed('exam not found',404);
-
-        $students_completed_exam = UserExam::where('status', 'completed')
-                                            ->where('exam_id', $exam_id)
-                                            ->count();
-
-        $users_course_count = UserCourse::where('course_id', $exam->course_id)->count();
-
-        $students_not_answer_all_questions = User::whereHas('StudentAnswers', function($query) use($exam_id){
-                                                        $query->whereHas('Question', function($query) use($exam_id){
-                                                            $query->where('model_id', $exam_id)
-                                                                ->where('model_type', Exam::class);
-                                                        });
-                                                    }, '<', count($exam->Questions))
-                                                    ->count();
-        return $this->success('success',
-                            200,
-                            'data',[
-                                'students_completed_exam' => $students_completed_exam, 
-                                'students_missed_exam' => $users_course_count - $students_completed_exam, 
-                                'students_not_answer_all_questions' => $students_not_answer_all_questions
-                            ]);
-
-    }
 }

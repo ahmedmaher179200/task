@@ -14,6 +14,7 @@ class StudentAnswer extends Model
         'question_id',
         'is_answer',
         'submit_answer',
+        'exam_id'
     ];
 
     public function Question(){
