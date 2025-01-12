@@ -5,7 +5,7 @@ namespace App\Http\Requests\Exam;
 use App\Traits\requestApiTrait;
 use Illuminate\Foundation\Http\FormRequest;
 
-class CompletedRequest extends FormRequest
+class PausingRequest extends FormRequest
 {
     use requestApiTrait;
     /**
@@ -25,9 +25,6 @@ class CompletedRequest extends FormRequest
     {
         return [
             'user_id' => 'required|exists:users,id',
-            'answers' => 'required|array',
-            'answers.*.submit_answer' => 'required|string',
-            'answers.*.question_id' => 'required|exists:questions,id',
         ];
     }
 }

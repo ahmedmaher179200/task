@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -37,6 +38,13 @@ class User extends Authenticatable
 
     public function StudentAnswers(){
         return $this->hasMany(StudentAnswer::class, 'user_id');
+    }
+
+    public function GetExamTimeLinesTotalMinutes($exam_id){
+        return $this->UserExamTimeLines()
+                    ->where('exam_id', $exam_id)
+                    ->select(DB::raw('SUM(TIMESTAMPDIFF(MINUTE, `start`, `end`)) as total_minutes'))
+                    ->value('total_minutes');
     }
 
     /**

@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Answer;
 use App\Models\Exam;
 use App\Models\Question;
-use App\Models\StudentAnswer;
 use App\Models\UserExam;
 use App\Models\UserExamTimeLine;
 use Exception;
@@ -24,11 +23,12 @@ class ExamService
             $question = $exam->Questions()->create($question_data);
             $question->Answers()->createMany($question_data['answers']);
         }
+        return $exam;
     }
 
     public function start($exam, $user){
         $this->StudentEnrolledCourseValidation($exam, $user);
-        $userExam = $user->Exams()->where('course_id', $exam->id)->first();
+        $userExam = $user->Exams()->where('exam_id', $exam->id)->first();
         if($userExam)
             throw new Exception('you already started this exam');
         UserExam::create([
@@ -44,11 +44,7 @@ class ExamService
 
     public function pausing($exam, $user){
         $this->StudentEnrolledCourseValidation($exam, $user);
-        $UserExamTimeLine = $user->UserExamTimeLines()
-                                ->where('exam_id', $exam->id)
-                                ->latest()
-                                ->where('end', null)
-                                ->first();
+        $UserExamTimeLine = $user->UserExamTimeLines()->LastOpenOne($exam->id)->first();
         if(!$UserExamTimeLine)
             throw new Exception('you have not started this exam');
 
@@ -57,12 +53,7 @@ class ExamService
 
     public function resuming($exam, $user){
         $this->StudentEnrolledCourseValidation($exam, $user);
-        $UserExamTimeLine = $user->UserExamTimeLines()
-                                ->where('exam_id', $exam->id)
-                                ->latest()
-                                ->where('end', null)
-                                ->first();
-
+        $UserExamTimeLine = $user->UserExamTimeLines()->LastOpenOne($exam->id)->first();
         if($UserExamTimeLine)
             throw new Exception('you already resuming this exam');
 
@@ -74,31 +65,28 @@ class ExamService
     }
 
     public function completed($exam, $user,$data){
-        $this->StudentEnrolledCourseValidation($exam, $user);
-        if($exam->status == 'completed')
-            throw new Exception('this exam is already completed');
-
-        $total_minutes = $user->UserExamTimeLines()
-                                ->where('exam_id', $exam->id)
-                                ->select(DB::raw('SUM(TIMESTAMPDIFF(MINUTE, `start`, `end`)) as total_minutes'))
-                                ->value('total_minutes');
-
-        if($exam->exam_time < $total_minutes)
-            throw new Exception('exam time is ended');
-
-        $mark = $this->CreateStudentAnswer($user, $exam,$data['answers']);
-        $user->UserExamTimeLines()
-                    ->where('exam_id', $exam->id)
-                    ->latest()
-                    ->where('end', null)
-                    ->update(['end' => now()]);
-
+        $this->CompletedExamValidation($exam, $user);
+        $mark = $this->CreateStudentAnswers($user, $exam,$data['answers']);
+        $user->UserExamTimeLines()->LastOpenOne($exam->id)->update(['end' => now()]);
         UserExam::where('exam_id', $exam->id)
                     ->where('user_id', $user->id)
                     ->update(['status' => 'completed','mark' => $mark]);
     }
 
-    public function CreateStudentAnswer($user, $exam, $answers){
+    public function CompletedExamValidation($exam, $user){
+        $user_course = $user->Courses()->where('course_id', $exam->course_id)->first();
+        if(!$user_course)
+            throw new Exception('this user not enrolled in this course');
+
+        if($exam->status == 'completed')
+            throw new Exception('this exam is already completed');
+
+        $total_minutes = $user->GetExamTimeLinesTotalMinutes($exam->id);
+        if($exam->exam_time < $total_minutes)
+            throw new Exception('exam time is ended');
+    }
+
+    public function CreateStudentAnswers($user, $exam, $answers){
         $this->AnswerQuestionValidation($exam, $answers);
         $mark = 0;
         foreach($answers as $answer_data){
@@ -125,7 +113,7 @@ class ExamService
                                     ->whereIn('id', $questionIds)
                                     ->count();        
         if($questions_count != count($questionIds))
-            throw new Exception('question not for this exam');
+            throw new Exception('question not belong to this exam');
     }
 
     public function StudentEnrolledCourseValidation($exam, $user){

@@ -15,4 +15,10 @@ class UserExamTimeLine extends Model
         'start',
         'end'
     ];
+
+    public function scopeLastOpenOne($query, $exam_id){
+        return  $query->where('exam_id', $exam_id)
+                        ->latest()
+                        ->where('end', null);
+    }
 }
