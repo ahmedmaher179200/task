@@ -33,4 +33,26 @@ class Exam extends Model
     public function scopeEager($query){
         return $query->with('Questions.Answers', 'Course');
     }
+
+    public function RandomQuestions($method = 1){
+        $questions = $this->Questions();
+        
+        if($method == 1){
+            // you can controle this algorithm
+            if(time() % 3 == 0){
+                $questions = $questions->orderBy('question_text', 'desc');
+            } else if(time() % 3 == 1){
+                $questions = $questions->orderBy('question_text', 'asc');
+            } else if(time() % 3 == 2){
+                $questions = $questions->orderBy('id', 'desc');
+            }
+        } else if($method == 2){
+            // random questions
+            $quetion_ids = (clone $questions)->pluck('id')->toArray();
+            shuffle($quetion_ids);
+            $questions = $questions->orderByRaw("FIELD(id, " . implode(',', $quetion_ids) . ")");
+        }
+
+        return $questions->get();
+    }
 }

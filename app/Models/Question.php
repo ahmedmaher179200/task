@@ -26,8 +26,4 @@ class Question extends Model
     {
         return $this->morphTo();
     }
-
-    public function scopeMyRandom($query){
-        return $query->inRandomOrder();
-    }
 }

@@ -20,7 +20,7 @@ class ExamResource extends JsonResource
             'exam_time' => $this->exam_time,
             'created_at' => $this->created_at,
             'course' => new CourseResource($this->Course),
-            'questions' => QuestionResource::collection($this->Questions()->MyRandom()->get()),
+            'questions' => QuestionResource::collection($this->RandomQuestions(2)),
         ];
     }
 }
