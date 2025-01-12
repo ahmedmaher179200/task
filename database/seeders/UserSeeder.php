@@ -18,10 +18,9 @@ class UserSeeder extends Seeder
         $faker = Faker::create();
         $course_ids = Course::pluck('id')->toArray();
         for ($i = 0; $i < 3; $i++) {
-            $name = $faker->name;
             $user = User::create([
-                'name' => $name,
-                'email' => $name . '@example.com',
+                'name' => $faker->name,
+                'email' => $faker->email,
                 'password'  => bcrypt('123456'),
             ]);
 
