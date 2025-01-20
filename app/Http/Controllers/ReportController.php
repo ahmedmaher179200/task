@@ -4,43 +4,44 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Exam\ShowRequest;
 use App\Models\Exam;
+use App\Models\Question;
 use App\Models\StudentAnswer;
 use App\Models\User;
 use App\Models\UserCourse;
 use App\Models\UserExam;
 use App\Models\UserExamTimeLine;
 use App\Traits\response;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
     use response;
-    public function results(ShowRequest $request){
-        $examTotalscore = Exam::find($request->exam_id)->Questions()->sum('points');
+    public function results(){
+        $examTotalscore = Exam::find(Request()->exam_id)->Questions()->sum('points');
 
-        $data = StudentAnswer::where('exam_id', $request->exam_id)
-                                ->join('users', 'users.id', '=', 'student_answer.user_id')
-                                ->join('questions', 'questions.id', '=', 'student_answer.question_id')
-                                ->join('answers', 'answers.question_id', '=', 'student_answer.question_id')
-                                ->where('answers.is_answer', 1)
-                                ->groupBy('users.id') 
-                                ->select('users.name',
-                                    'users.id',
-                                    'users.name',
-                                    DB::raw('COUNT(student_answer.id) as answer_count'),
-                                    DB::raw('SUM(IF(student_answer.submit_answer = answers.answer_text, questions.points, 0)) as total_points'),
-                                    DB::raw('(SUM(IF(student_answer.submit_answer = answers.answer_text, questions.points, 0)) / '.$examTotalscore.') * 100 as percentage')
+        $data = User::join('student_answer', 'student_answer.user_id', '=', 'users.id')
+                        ->where('student_answer.exam_id', Request()->exam_id)
+                        ->join('questions', 'questions.id', '=', 'student_answer.question_id')
+                        ->join('answers', 'answers.question_id', '=', 'student_answer.question_id')
+                        ->where('answers.is_answer', 1)
+                        ->groupBy('users.id')
+                        ->select('users.id',
+                                'users.name',
+                                DB::raw('COUNT(student_answer.id) as answer_count'),
+                                DB::raw('SUM(IF(student_answer.submit_answer = answers.answer_text, questions.points, 0)) as total_points'),
+                                DB::raw('(SUM(IF(student_answer.submit_answer = answers.answer_text, questions.points, 0)) / '.$examTotalscore.') * 100 as percentage')
                                 )
-                                ->get();
-        
+                        ->get();
         return $this->success('success',200,'data',$data);
     }
 
-    public function questionsAnalysis(ShowRequest $request){
-        $baseQuery = StudentAnswer::where('exam_id', $request->exam_id)
-                                ->join('questions', 'questions.id', '=', 'student_answer.question_id')
+    public function questionsAnalysis(){
+        $baseQuery = Question::join('student_answer', 'student_answer.question_id', '=', 'questions.id')
                                 ->join('answers', 'answers.question_id', '=', 'student_answer.question_id')
                                 ->where('answers.is_answer', 1)
+                                ->where('questions.model_id', Request()->exam_id)
+                                ->where('questions.model_type', Exam::class)
                                 ->groupBy('questions.id') 
                                 ->select(
                                     'questions.id',
@@ -51,7 +52,6 @@ class ReportController extends Controller
 
         $hardest = (clone $baseQuery)
             ->orderBy('correct_answer')
-            ->orderByDesc('correct_answer')
             ->first();
         
         $easiest = (clone $baseQuery)
@@ -113,13 +113,21 @@ class ReportController extends Controller
                                             ->count();
 
         $users_course_count = UserCourse::where('course_id', $exam->course_id)->count();
-        $students_not_answer_all_questions = User::whereHas('StudentAnswers', function($query) {
-                                                        $query->whereHas('Question', function($query){
-                                                            $query->where('model_id', Request()->exam_id)
-                                                                ->where('model_type', Exam::class);
-                                                        });
-                                                    }, '<', count($exam->Questions))
+
+        $students_not_answer_all_questions = User::leftJoin('student_answer', function($join){
+                                                        $join->on('student_answer.user_id', '=', 'users.id')
+                                                        ->where('student_answer.exam_id', Request()->exam_id);
+                                                    })
+                                                    ->join('user_course', 'user_course.user_id', '=', 'users.id')
+                                                    ->where('user_course.course_id', $exam->course_id)
+                                                    ->groupBy('users.id')
+                                                    ->having(DB::raw('COUNT(student_answer.id)'), '<', count($exam->Questions))
+                                                    ->select('users.id',
+                                                            'users.name',
+                                                            DB::raw('COUNT(student_answer.id) as answer_count'))
                                                     ->count();
+
+
         return $this->success('success',
                             200,
                             'data',[
